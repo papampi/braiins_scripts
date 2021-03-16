@@ -8,6 +8,8 @@ LOW_FAN_SPEED=40
 HIGH_FAN_SPEED=75
 NORMAL_FAN_SPEED=50
 
+
+
 if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_hot" ]] || [[ $1 == "apply_cold" ]]
 then
   for i in {20..101}
@@ -152,6 +154,7 @@ then
       echo "$ip No Miner"
     fi
   done
+
 elif [[ $1 == "check_power" ]]
 then
   for i in {20..101}
@@ -164,13 +167,14 @@ then
       then
         echo "$ip no bosminer found"
       else
-        powerlimit=$(echo '{"command":"tunerstatus"}' | nc $ip 4028 | jq ."TUNERSTATUS"[]."PowerLimit")
-        powerconsumption=$(   echo '{"command":"tunerstatus"}' | nc $ip 4028 | jq ."TUNERSTATUS"[]."ApproximateMinerPowerConsumption")
+        tunerstatus=$(echo '{"command":"tunerstatus"}' | nc $ip 4028 | jq ."TUNERSTATUS"[])      
+        powerlimit=$(echo $tunerstatus | jq ."PowerLimit")
+        powerconsumption=$(   echo $tunerstatus | jq ."ApproximateMinerPowerConsumption")
         if [[ $powerlimit -lt 1400 ]]
         then
-          echo "$ip - Power Limit: $powerlimit - Approximate Power Consumption: $powerconsumption - Low Power "
+          echo "$ip - Power Limit: $powerlimit - Apprx Power Consumption: $powerconsumption - Low Power "
         else
-          echo "$ip - Power Limit: $powerlimit - Approximate Power Consumption: $powerconsumption"
+          echo "$ip - Power Limit: $powerlimit - Apprx Power Consumption: $powerconsumption"
         fi
       fi
     else
@@ -208,8 +212,62 @@ then
     fi
   done
 
+elif [[ $1 == "MHS_av" ]] || [[ $1 == "MHS_5s" ]] || [[ $1 == "MHS_1m" ]] || [[ $1 == "MHS_5m" ]] || [[ $1 == "MHS_15m" ]] || [[ $1 == "MHS_24h" ]] || [[ $1 == "MHS_all" ]]
+then
+  for i in {20..101}
+  do
+    ip="192.168.1.$i"
+    fping -c1 -t100 $ip 2>/dev/null 1>/dev/null
+    if [ "$?" = 0 ]
+    then
+      if ! echo '{"command":"version"}' | nc $ip 4028 |jq ."VERSION"[]."BOSminer"  | grep -q bosminer
+      then
+        echo "$ip no bosminer found"
+      else
+        summary=$(echo '{"command":"summary"}' | nc $ip 4028 | jq ."SUMMARY"[])
+        MHS_av=$(echo $summary | jq '."MHS av"')
+        MHS_av=$(echo "scale=2;$MHS_av/1000000" | bc )
+        MHS_5s=$(echo $summary | jq '."MHS 5s"')
+        MHS_5s=$(echo "scale=2;$MHS_5s/1000000" | bc )
+        MHS_1m=$(echo $summary | jq '."MHS 1m"')
+        MHS_1m=$(echo "scale=2;$MHS_1m/1000000" | bc )
+        MHS_5m=$(echo $summary | jq '."MHS 5m"')
+        MHS_5m=$(echo "scale=2;$MHS_5m/1000000" | bc )
+        MHS_15m=$(echo $summary | jq '."MHS 15m"')
+        MHS_15m=$(echo "scale=2;$MHS_15m/1000000" | bc )
+        MHS_24h=$(echo $summary | jq '."MHS 24h"')
+        MHS_24h=$(echo "scale=2;$MHS_24h/1000000" | bc )
+
+        if [[ $1 == "MHS_av" ]]
+        then
+          echo "$ip,  $MHS_av"
+        elif [[ $1 == "MHS_5s" ]]
+        then
+          echo "$ip,  $MHS_5s"
+        elif [[ $1 == "MHS_1m" ]]
+        then
+          echo "$ip,  $MHS_1m"
+        elif [[ $1 == "MHS_5m" ]]
+        then
+          echo "$ip,  $MHS_5m"
+        elif [[ $1 == "MHS_15m" ]]
+        then
+          echo "$ip,  $MHS_15m"
+        elif [[ $1 == "MHS_24h" ]]
+        then
+          echo "$ip,  $MHS_24h"
+        elif [[ $1 == "MHS_all" ]]
+        then
+          echo "$ip, MHS_av: $MHS_av | MHS_5s: $MHS_5s | MHS_1m: $MHS_1m | MHS_5m: $MHS_5m | MHS_15m: $MHS_15m | MHS_24h: $MHS_24h"
+        fi
+      fi
+    else
+      echo "$ip OFFLINE"
+    fi
+  done
+
 else
-  echo "Ivalid Input, Use: check_temp, apply_temp, apply_hot, apply_cold, check_share, share_reload, check_power"
+  echo "Ivalid Input, Use: check_temp, apply_temp, apply_hot, apply_cold, check_share, share_reload, check_power, MHS_av, MHS_5s, MHS_1m, MHS_5m, MHS_15m, MHS_24h, MHS_all"
   echo " Usage:"
 
 
