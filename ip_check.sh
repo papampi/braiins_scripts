@@ -55,7 +55,7 @@ do
       echo "####################################################################"  |  tee -a ${LOG_FILE}
       echo "$(date) - IP changed: 1st IP: $check_ip_1 , 2nd IP: $check_ip_2 " |  tee -a ${LOG_FILE}
       echo "####################################################################"  |  tee -a ${LOG_FILE}
-     "$DIR"/bos-toolbox command $ip_list -u $USERNAME -p $PASSWORD " /etc/bosminer.toml && /etc/init.d/bosminer reload"
+     "$DIR"/bos-toolbox command $ip_list -u $USERNAME -p $PASSWORD " /etc/init.d/bosminer reload"
     elif [[ "$valid_ip_1" == "nok" ]] || [[ "$valid_ip_2" == "nok" ]] ; then
       echo "Not a valid IP: 1st IP: $check_ip_1 , 2nd IP: $check_ip_2"
     else
