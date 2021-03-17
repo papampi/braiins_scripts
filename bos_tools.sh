@@ -8,13 +8,18 @@ LOW_FAN_SPEED=40
 HIGH_FAN_SPEED=75
 NORMAL_FAN_SPEED=50
 
-
+#ip range a.b.c.{d1...d2}
+a=192
+b=168
+c=1
+d1=20
+d2=101
 
 if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_hot" ]] || [[ $1 == "apply_cold" ]]
 then
-  for i in {20..101}
+for ((i=$d1; i<$d2; i++))
   do
-    ip="192.168.1.$i"
+    ip="$a.$b.$c.$i"
     fping -c1 -t100 $ip 2>/dev/null 1>/dev/null
     if [ "$?" = 0 ]
     then
@@ -157,9 +162,9 @@ then
 
 elif [[ $1 == "check_power" ]]
 then
-  for i in {20..101}
+for ((i=$d1; i<$d2; i++))
   do
-    ip="192.168.1.$i"
+    ip="$a.$b.$c.$i"
     fping -c1 -t100 $ip 2>/dev/null 1>/dev/null
     if [ "$?" = 0 ]
     then
@@ -214,9 +219,9 @@ then
 
 elif [[ $1 == "MHS_av" ]] || [[ $1 == "MHS_5s" ]] || [[ $1 == "MHS_1m" ]] || [[ $1 == "MHS_5m" ]] || [[ $1 == "MHS_15m" ]] || [[ $1 == "MHS_24h" ]] || [[ $1 == "MHS_all" ]]
 then
-  for i in {20..101}
+for ((i=$d1; i<$d2; i++))
   do
-    ip="192.168.1.$i"
+    ip="$a.$b.$c.$i"
     fping -c1 -t100 $ip 2>/dev/null 1>/dev/null
     if [ "$?" = 0 ]
     then
