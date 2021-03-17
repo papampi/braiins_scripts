@@ -15,6 +15,7 @@ c=1
 d1=20
 d2=101
 
+d2=$((d2+1))
 if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_hot" ]] || [[ $1 == "apply_cold" ]]
 then
 for ((i=$d1; i<$d2; i++))
