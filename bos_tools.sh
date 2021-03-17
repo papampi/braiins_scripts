@@ -7,7 +7,7 @@ MAX_TARGET_TEMP=85
 LOW_FAN_SPEED=40
 HIGH_FAN_SPEED=75
 NORMAL_FAN_SPEED=50
-
+NORMAL_POWER=1400
 #ip range a.b.c.{d1...d2}
 a=192
 b=168
@@ -175,7 +175,7 @@ for ((i=$d1; i<$d2; i++))
         tunerstatus=$(echo '{"command":"tunerstatus"}' | nc $ip 4028 | jq ."TUNERSTATUS"[])      
         powerlimit=$(echo $tunerstatus | jq ."PowerLimit")
         powerconsumption=$(   echo $tunerstatus | jq ."ApproximateMinerPowerConsumption")
-        if [[ $powerlimit -lt 1400 ]]
+        if [[ $powerlimit -lt $NORMAL_POWER ]]
         then
           echo "$ip - Power Limit: $powerlimit - Apprx Power Consumption: $powerconsumption - Low Power "
         else
@@ -189,9 +189,9 @@ for ((i=$d1; i<$d2; i++))
 
 elif [[ $1 == "check_share" ]] || [[ $1 == "share_reload" ]]
 then
-  for i in {20..101}
+for ((i=$d1; i<$d2; i++))
   do
-    ip="192.168.1.$i"
+    ip="$a.$b.$c.$i"
     fping -c1 -t100 $ip 2>/dev/null 1>/dev/null
     if [ "$?" = 0 ]
     then
