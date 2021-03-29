@@ -1,12 +1,13 @@
 #!/bin/bash
 
 #Edit these values:
+
 PASSWORD=root # Change your Password if needed
 MIN_TARGET_TEMP=70
 MAX_TARGET_TEMP=80
 LOW_FAN_SPEED=30
-NORMAL_FAN_SPEED=45
 HIGH_FAN_SPEED=80
+NORMAL_FAN_SPEED=45
 NORMAL_POWER=1400
 
 #Set your ip range a.b.c.{d1...d2}
@@ -38,12 +39,8 @@ then
         TUNERSTATUS=$(echo '{"command":"tunerstatus"}' | nc $ip 4028 | jq ."TUNERSTATUS"[])
         TEMPCTRL=$(echo '{"command":"tempctrl"}' | nc $ip 4028 |jq ."TEMPCTRL"[])
         FANS=$(echo '{"command":"fans"}' | nc $ip 4028 | jq . | jq -r ".FANS"[])
-        fan=$(echo "$FANS" | jq -r ."Speed"| head -1)
-        target_temp=$(echo "$TEMPCTRL" |jq ."Target")
         elapsed_time=$(echo "$SUMMARY" | jq ."Elapsed")
-        accepted_shares=$(echo "$SUMMARY" | jq ."Accepted")
-        powerlimit=$(echo "$TUNERSTATUS" | jq ."PowerLimit")
-        powerconsumption=$(echo "$TUNERSTATUS" | jq ."ApproximateMinerPowerConsumption")
+
         if echo "$TUNERSTATUS" | jq ."TunerChainStatus"[]."Status" | grep -q "Tuning individual chips"
         then
           tuning_chips=yes
@@ -62,6 +59,8 @@ then
         fi
         if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_hot" ]] || [[ $1 == "apply_cold" ]]
         then
+          fan=$(echo "$FANS" | jq -r ."Speed"| head -1)
+          target_temp=$(echo "$TEMPCTRL" |jq ."Target")
           if [[ $warm_up == no ]]; then
             if [[ $tuning_chips == no ]] && [[ $testing_profile == no ]]; then
               if [[ $target_temp == 89 ]]
@@ -140,6 +139,8 @@ then
           fi
         elif [[ $1 == "check_power" ]]
         then
+          powerlimit=$(echo "$TUNERSTATUS" | jq ."PowerLimit")
+          powerconsumption=$(echo "$TUNERSTATUS" | jq ."ApproximateMinerPowerConsumption")
           if [[ $powerlimit -lt $NORMAL_POWER ]]
           then
             echo "$ip - Power Limit: $powerlimit - Apprx Power Consumption: $powerconsumption - Low Power "
@@ -148,6 +149,7 @@ then
           fi
         elif [[ $1 == "check_share" ]] || [[ $1 == "share_reload" ]]
         then
+          accepted_shares=$(echo "$SUMMARY" | jq ."Accepted")
           if [[ $accepted_shares == 0 ]] && [[ $elapsed_time -gt 120 ]]
           then
             echo "$ip Accepted Shares in $elapsed_time seconds is $accepted_shares, Restart miner"
@@ -172,7 +174,6 @@ then
           THS_15m=$(echo "scale=2;$MHS_15m/1000000" | bc )
           MHS_24h=$(echo "$SUMMARY" | jq '."MHS 24h"')
           THS_24h=$(echo "scale=2;$MHS_24h/1000000" | bc )
-
           if [[ $1 == "THS_av" ]]
           then
             echo "$ip,  $THS_av"
@@ -197,6 +198,7 @@ then
           fi
         elif [[ $1 == "efficiency" ]]
         then
+          powerconsumption=$(echo "$TUNERSTATUS" | jq ."ApproximateMinerPowerConsumption")
           MHS_av=$(echo "$SUMMARY" | jq '."MHS av"')
           THS_av=$(echo "scale=2;$MHS_av/1000000" | bc )
           MHS_24h=$(echo "$SUMMARY" | jq '."MHS 24h"')
@@ -207,7 +209,7 @@ then
         fi
       fi
     else
-      echo "$ip OFFLINE"
+      echo "$ip No Miner Found"
     fi
   done
 else
