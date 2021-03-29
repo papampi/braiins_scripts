@@ -2,13 +2,14 @@
 
 #Edit these values:
 
-PASSWORD=root # Change your Password if needed
+PASSWORD=root                 # Change your Password if needed
 MIN_TARGET_TEMP=70
 MAX_TARGET_TEMP=80
 LOW_FAN_SPEED=30
 HIGH_FAN_SPEED=80
 NORMAL_FAN_SPEED=45
 NORMAL_POWER=1400
+
 
 #Set your ip range a.b.c.{d1...d2}
 a=192
@@ -23,7 +24,7 @@ d2=101
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 d2=$((d2+1))
-if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_hot" ]] || [[ $1 == "apply_cold" ]] || [[ $1 == "check_power" ]] || [[ $1 == "check_share" ]] || [[ $1 == "share_reload" ]] || [[ $1 == "THS_av" ]] || [[ $1 == "THS_5s" ]] || [[ $1 == "THS_1m" ]] || [[ $1 == "THS_5m" ]] || [[ $1 == "THS_15m" ]] || [[ $1 == "THS_24h" ]] || [[ $1 == "THS_all" ]] || [[ $1 == "efficiency" ]]
+if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_higher_temp" ]] || [[ $1 == "apply_lower_temp" ]] || [[ $1 == "check_power" ]] || [[ $1 == "check_share" ]] || [[ $1 == "share_reload" ]] || [[ $1 == "THS_av" ]] || [[ $1 == "THS_5s" ]] || [[ $1 == "THS_1m" ]] || [[ $1 == "THS_5m" ]] || [[ $1 == "THS_15m" ]] || [[ $1 == "THS_24h" ]] || [[ $1 == "THS_all" ]] || [[ $1 == "efficiency" ]]
 then
   for ((i=d1; i<d2; i++))
   do
@@ -57,7 +58,7 @@ then
         else
           warm_up=no
         fi
-        if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_hot" ]] || [[ $1 == "apply_cold" ]]
+        if [[ $1 == "check_temp" ]] || [[ $1 == "apply_temp" ]] || [[ $1 == "apply_higher_temp" ]] || [[ $1 == "apply_lower_temp" ]]
         then
           fan=$(echo "$FANS" | jq -r ."Speed"| head -1)
           target_temp=$(echo "$TEMPCTRL" |jq ."Target")
@@ -72,14 +73,14 @@ then
               if [[ $target_temp -lt $MIN_TARGET_TEMP ]]
               then
                 echo "$ip Target Temp: $target_temp, Fan Speed: $fan, less than min change to $MIN_TARGET_TEMP"
-                if [[ $1 == apply_temp ]] || [[ $1 == apply_hot ]];then
+                if [[ $1 == apply_temp ]] || [[ $1 == apply_higher_temp ]];then
                   echo "Applying new target temp $MIN_TARGET_TEMP to $ip"
                   "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed -i \"s/^target_temp = .*/target_temp = $MIN_TARGET_TEMP/g\" /etc/bosminer.toml && /etc/init.d/bosminer reload"
                 fi
               elif [[ $target_temp -gt $MAX_TARGET_TEMP ]]
               then
                 echo "$ip Target temp:$target_temp more than max change to $MAX_TARGET_TEMP"
-                if [[ $1 == apply_temp ]] || [[ $1 == apply_hot ]];then
+                if [[ $1 == apply_temp ]] || [[ $1 == apply_higher_temp ]];then
                   echo "Applying new target temp $MAX_TARGET_TEMP to $ip"
                   "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed -i \"s/^target_temp = .*/target_temp = $MAX_TARGET_TEMP/g\" /etc/bosminer.toml && /etc/init.d/bosminer reload"
                 fi
@@ -95,7 +96,7 @@ then
                       NEW_TARGET_TEMP=$MAX_TARGET_TEMP
                     fi
                     echo "Change target temp from $target_temp to $NEW_TARGET_TEMP"
-                    if [[ $1 == apply_temp ]] || [[ $1 == apply_hot ]];then
+                    if [[ $1 == apply_temp ]] || [[ $1 == apply_higher_temp ]];then
                       echo "Applying new target temp $NEW_TARGET_TEMP to $ip"
                       "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed -i \"s/^target_temp = .*/target_temp = $NEW_TARGET_TEMP/g\" /etc/bosminer.toml && /etc/init.d/bosminer reload"
                     fi
@@ -105,7 +106,7 @@ then
                   if [[ $target_temp -gt $MIN_TARGET_TEMP ]]
                   then
                     echo "Change target temp from $target_temp to $MIN_TARGET_TEMP"
-                    if [[ $1 == apply_temp ]] || [[ $1 == apply_cold ]];then
+                    if [[ $1 == apply_temp ]] || [[ $1 == apply_lower_temp ]];then
                       echo "Applying new target temp $NEW_TARGET_TEMP to $ip"
                       "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed -i \"s/^target_temp = .*/target_temp = $MIN_TARGET_TEMP/g\" /etc/bosminer.toml && /etc/init.d/bosminer reload"
                     fi
@@ -120,7 +121,7 @@ then
                       NEW_TARGET_TEMP=$MIN_TARGET_TEMP
                     fi
                     echo "$ip Target Temp $target_temp, Change it to $NEW_TARGET_TEMP"
-                    if [[ $1 == apply_temp ]] || [[ $1 == apply_cold ]];then
+                    if [[ $1 == apply_temp ]] || [[ $1 == apply_lower_temp ]];then
                       echo "Applying new target temp $NEW_TARGET_TEMP to $ip"
                       "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed -i \"s/^target_temp = .*/target_temp = $NEW_TARGET_TEMP/g\" /etc/bosminer.toml && /etc/init.d/bosminer reload"
                     fi
@@ -209,10 +210,10 @@ then
         fi
       fi
     else
-      echo "$ip No Miner Found"
+      echo "$ip - No Miner Found"
     fi
   done
 else
-  echo "Ivalid Input, Use: check_temp, apply_temp, apply_hot, apply_cold, check_share, share_reload, check_power, THS_av, THS_5s, THS_1m, THS_5m, THS_15m, THS_24h, THS_all, efficiency"
+  echo "Ivalid Input, Use: check_temp, apply_temp, apply_higher_temp, apply_lower_temp, check_share, share_reload, check_power, THS_av, THS_5s, THS_1m, THS_5m, THS_15m, THS_24h, THS_all, efficiency"
   echo " Usage:"
 fi
