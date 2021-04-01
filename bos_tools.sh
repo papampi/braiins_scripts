@@ -67,7 +67,7 @@ then
               if [[ $target_temp == 89 ]]
               then
                 "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed -i \"s/^target_temp = .*/target_temp = $MAX_TARGET_TEMP/g\" /etc/bosminer.toml"
-                "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed i '/\[temp_control\]/a target_temp = $MAX_TARGET_TEMP' /etc/bosminer.toml "
+                "$DIR"/bos-toolbox command $ip -p $PASSWORD "sed -i '/\[temp_control\]/a target_temp = $MAX_TARGET_TEMP' /etc/bosminer.toml "
                 "$DIR"/bos-toolbox command $ip -p $PASSWORD " /etc/init.d/bosminer reload"
               fi
               if [[ $target_temp -lt $MIN_TARGET_TEMP ]]
