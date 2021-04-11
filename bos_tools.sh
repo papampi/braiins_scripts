@@ -154,9 +154,9 @@ then
           if [[ $accepted_shares == 0 ]] && [[ $elapsed_time -gt 120 ]]
           then
             echo "$ip Accepted Shares in $elapsed_time seconds is $accepted_shares, Restart miner"
-            if [[ $1 == "check_reload" ]]
+            if [[ $1 == "share_reload" ]]
             then
-              "$DIR"/bos-toolbox command $ip -p $PASSWORD "/etc/bosminer.toml && /etc/init.d/bosminer reload"
+              "$DIR"/bos-toolbox command $ip -p $PASSWORD "/etc/init.d/bosminer reload"
             fi
           else
             echo "$ip Accepted Shares in $elapsed_time seconds is $accepted_shares"
